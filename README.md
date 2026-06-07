@@ -1,19 +1,49 @@
-# 安裝教學 - AI Tutor System 🎭
+name: Unity WebGL Build & Deploy
 
-本文件提供快速安裝與測試步驟，讓使用者能在本地環境或雲端部署專案。
+on:
+  push:
+    branches:
+      - main   # 當 main 分支有更新時觸發
 
----
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-## 🖥️ 系統需求
-- Unity 2021.3 LTS 或以上版本
-- Git 2.30 或以上版本
-- 作業系統：Windows 10/11 或 macOS
-- 瀏覽器：支援 WebGL (Chrome, Edge, Safari)
+    steps:
+      # 1️⃣ 取出程式碼
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
----
+      # 2️⃣ 安裝 Unity Builder
+      - name: Unity WebGL Build
+        uses: game-ci/unity-builder@v2
+        with:
+          unityVersion: 2021.3.20f1   # 請改成你專案的 Unity 版本
+          targetPlatform: WebGL
 
-## 📂 安裝步驟
-1. **Clone 專案**
-   ```bash
-   git clone https://github.com/chanqueenieolivia-ui/AI-Tutor-System.git
-   cd AI-Tutor-System
+      # 3️⃣ 儲存建置結果
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: WebGLBuild
+          path: build/WebGL
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # 1️⃣ 取出建置結果
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: WebGLBuild
+          path: build/WebGL
+
+      # 2️⃣ 部署到 GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/WebGL
+
